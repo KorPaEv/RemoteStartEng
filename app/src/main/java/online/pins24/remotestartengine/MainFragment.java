@@ -1,22 +1,14 @@
 package online.pins24.remotestartengine;
 
-import android.Manifest;
-
 import android.app.AlertDialog;
-import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.os.Bundle;
-import android.telephony.PhoneStateListener;
 import android.telephony.SmsManager;
-import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,7 +20,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.content.Context;
 
-public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWorkDelayCallBack, PhoneCallListener.PhoneCallListenerCallBack
+public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWorkDelayCallBack, PhoneCaller.PhoneCallerCallBack
 {
     //region КОНСТАНТЫ
     private final String SHAREDPREF = "SharedPref";
@@ -48,8 +40,7 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
     private LinearLayout imgLayout;
     Context appContext;
     private MediaPlayer mp;
-    //private CountDownTimer timer;
-
+    PhoneCaller phoneCaller;
     private TimerWorkDelay twd;
     //endregion
     //region ПЕРЕМЕННЫЕ
@@ -78,7 +69,10 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
         twd = new TimerWorkDelay();
         //цепляем интерфейс
         twd.setTimerWorkDelayCallBack(this);
-        //twd.startTimer();
+        //Класс наблюдатель менеджера звонков
+        phoneCaller = new PhoneCaller();
+        //цепляем интерфейс
+        phoneCaller.setPhoneCallerCallBack(this); //цепляем интерфейс
     }
     //endregion
 
@@ -348,17 +342,13 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
     //region callToDevice Куда именно звоним
     private void callToDevice(String phoneNum)
     {
-        //Класс наблюдатель менеджера звонков
-        PhoneCallListener phoneListener = new PhoneCallListener();
-        phoneListener.setPhoneCallListenerCallBack(this); //цепляем интерфейс
-        PhoneCaller phoneCaller = new PhoneCaller(appContext);
-        phoneCaller.callTo(phoneListener, phoneNum);
+        phoneCaller.callTo(appContext, phoneNum);
     }
     //endregion
 
-    //region doSomethingCallBackPCL() Переопределяем функцию из PhoneCallListener
+    //region doSomethingCallBackPCL() Переопределяем функцию из PhoneCaller
     @Override
-    public void doSomethingCallBackPCL() {
+    public void doSomethingCallBackPhC() {
         //либо мы стартуем двигло - тогда запускаем таймер прогрева и возвращаем наш экран приложухи обратно со всеми установками
         //либо его глушим - тогда стопим таймер и выставляем все вьюхи на экране согласно функционалу стоп
         if (startFlag) runTimerAndReturnActivity();

@@ -11,38 +11,77 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.widget.Toast;
 
-public class PhoneCaller {
+public class PhoneCaller extends PhoneStateListener {
 
-    Context _context;
+    private boolean isPhoneCalling = false;
 
-    public PhoneCaller(Context _context) {
-        this._context = _context;
+    //region Создаем интерфейс
+    public interface PhoneCallerCallBack {
+        void doSomethingCallBackPhC();
     }
 
-    public void callTo(PhoneCallListener phoneCallListener, String callToNum) {
+    private PhoneCallerCallBack phoneCallerCallBack;
+    //endregion
+    //region Setters
+    public void setPhoneCallerCallBack(PhoneCallerCallBack phoneCallerCallBack) {
+        this.phoneCallerCallBack = phoneCallerCallBack;
+    }
+    //endregion
+
+    //тут остлеживаем текущее состояние активного вызова и его изменение
+    @Override
+    public void onCallStateChanged(int state, String incomingNumber) {
+        switch (state) {
+            //если сейчас идет звонок исходящий или входящий пофиг
+            case TelephonyManager.CALL_STATE_RINGING:
+                break; // phone ringing
+            //если положили трубу или скинули
+            case TelephonyManager.CALL_STATE_OFFHOOK:
+                isPhoneCalling = true;
+                break;
+            //если звонилка завершила свою работу
+            case TelephonyManager.CALL_STATE_IDLE:
+                if (isPhoneCalling) {
+                    //либо мы стартуем двигло - тогда запускаем таймер прогрева и возвращаем наш экран приложухи обратно со всеми установками
+                    //либо его глушим - тогда стопим таймер и выставляем все вьюхи на экране согласно функционалу стоп
+                    doSomething();
+                    isPhoneCalling = false;
+                }
+                break;
+            default:
+                throw new IllegalStateException("TelephonyManager STATE IS UNKNOWN");
+        }
+    }
+
+    private void doSomething() {
+        if (phoneCallerCallBack == null) return;
+        else phoneCallerCallBack.doSomethingCallBackPhC();
+    }
+
+    public void callTo(Context context, String callToNum) {
         try
         {
             //Сам менеджер звонков устройства - получаем сервис системный
-            TelephonyManager telephonyManager = (TelephonyManager)_context.getSystemService(Context
+            TelephonyManager telephonyManager = (TelephonyManager)context.getSystemService(Context
                     .TELEPHONY_SERVICE);
             //теперь определяем что нам надо делать, а именно отслеживаем само состояние подключения если у нас идет активный вызов
-            telephonyManager.listen(phoneCallListener, PhoneStateListener.LISTEN_CALL_STATE);
+            telephonyManager.listen(this, PhoneStateListener.LISTEN_CALL_STATE);
             // создаем интент звонилку
             Intent callIntent = new Intent(Intent.ACTION_CALL);
             callIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             //парсим куда звоним и передаем на исполнение в интент
             callIntent.setData(Uri.parse(String.format("tel:%s", callToNum)));
             //проверяем права приложения на звонок
-            if (ActivityCompat.checkSelfPermission(_context, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED)
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED)
             {
                 return;
             }
             //стартуем звонилку
-            _context.startActivity(callIntent);
+            context.startActivity(callIntent);
         }
         catch (ActivityNotFoundException e)
         {
-            Toast.makeText(_context, "Ошибка: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(context, "Ошибка: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 }
