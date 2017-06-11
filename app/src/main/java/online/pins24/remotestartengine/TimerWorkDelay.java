@@ -1,7 +1,7 @@
 package online.pins24.remotestartengine;
 
 import android.os.Handler;
-import android.widget.TextView;
+
 import java.util.concurrent.TimeUnit;
 
 //Вторая реализация таймера и события что делать по его окончанию
@@ -9,16 +9,15 @@ public class TimerWorkDelay {
 
     private TimerWorkDelayCallBack timerWorkDelayCallBack;
     private Handler handler = new Handler();
-    private int COUNTER = 15;
+    private int counter = 0;
     private static long ONE_MIN = TimeUnit.MINUTES.toMillis(1);
-
-    public interface TimerWorkDelayCallBack {
-        void doSomethingCallBackTWD();
-        void changeViewFragmentTWD();
-    }
 
     public void setTimerWorkDelayCallBack(TimerWorkDelayCallBack timerWorkDelayCallBack) {
         this.timerWorkDelayCallBack = timerWorkDelayCallBack;
+    }
+
+    public int getCounter() {
+        return counter;
     }
 
     Runnable tickTimer = new Runnable() {
@@ -29,18 +28,23 @@ public class TimerWorkDelay {
     };
 
     public void startTimer() {
+        if (counter > 0) {
+            throw new IllegalStateException("Таймер уже запущен");
+        }
+        counter = 15;
         tickTimer();
     }
 
-    public void stopTimer() {
+    public void stopTimerManual() {
         // Удаляем Runnable-объект для прекращения задачи
         handler.removeCallbacks(tickTimer);
+        counter = 0;
     }
 
     public void tickTimer() {
-        COUNTER--;
-        if (COUNTER > 0) {
-            timerWorkDelayCallBack.changeViewFragmentTWD();
+        counter--;
+        if (counter > 0) {
+            timerWorkDelayCallBack.onTimerChanged();
             scheduleNextMinute();
         }
         else {
@@ -58,12 +62,13 @@ public class TimerWorkDelay {
             return;
         }
         else {
-            timerWorkDelayCallBack.doSomethingCallBackTWD();
+            timerWorkDelayCallBack.onTimerStop();
         }
     }
 
-    public void changeTextViewVal(TextView tv) {
-        tv.setText(String.format("%02d", COUNTER));
+    public interface TimerWorkDelayCallBack {
+        void onTimerStop();
+        void onTimerChanged();
     }
 }
 
