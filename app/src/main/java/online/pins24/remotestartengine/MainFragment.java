@@ -16,6 +16,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.content.Context;
@@ -27,8 +28,6 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
     private final String PHONESHAREDPREF = "PhoneSharedPref";
     private final String TEMPVALSHAREDPREF = "TempValSharedPref";
     private final String RESET = "reset";
-    private static final int MILLIS_PER_SECOND = 1000;
-    private static final int SECONDS_TO_COUNTDOWN = 900;
     private final String CELSIUS = "\u2103";
     //endregion
     //region ОБЪЯВЛЯЕМ ОБЪЕКТЫ
@@ -40,8 +39,8 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
     private LinearLayout imgLayout;
     Context appContext;
     private MediaPlayer mp;
-    PhoneCaller phoneCaller;
-    private TimerWorkDelay twd;
+    private CustomApplication customApplication;
+
     //endregion
     //region ПЕРЕМЕННЫЕ
     private String currentPhone;
@@ -61,20 +60,26 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
         super.onViewCreated(view, savedInstanceState);
         //получаем контекст приложения - ссылку на сам объект приложения (читай что такое контекст)
         appContext = getContext().getApplicationContext();
+        customApplication = (CustomApplication)getContext().getApplicationContext();
         //ищем наши вьюхи на активити
         findViews();
         //загрузка данных в переменные
         fillData();
-        //класс таймера
-        twd = new TimerWorkDelay();
-        //цепляем интерфейс
-        twd.setTimerWorkDelayCallBack(this);
-        //Класс наблюдатель менеджера звонков
-        phoneCaller = new PhoneCaller();
-        //цепляем интерфейс
-        phoneCaller.setPhoneCallerCallBack(this); //цепляем интерфейс
+        //работаем с таймером через Application, цепляем интерфейс
+        customApplication.getTimerWorkDelay().setTimerWorkDelayCallBack(this);
+        //менеджер звонков
+        customApplication.getPhoneCaller().setPhoneCallerCallBack(this);
     }
     //endregion
+
+    @Override
+    public void onDestroyView() {
+        //Убиваем наши объекты звонилки и таймера при сворачивании приложения
+        //При этом фоном таймер продолжает свою работу
+        customApplication.getTimerWorkDelay().setTimerWorkDelayCallBack(null);
+        customApplication.getPhoneCaller().setPhoneCallerCallBack(null);
+        super.onDestroyView();
+    }
 
     //region findViews() Поиск вьюх определенных в R.id
     private void findViews()
@@ -98,6 +103,7 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
         bStopEngine.setOnClickListener(bClickListener);
         bActivateDevice.setOnClickListener(bClickListener);
         bResetDevice.setOnClickListener(bClickListener);
+
     }
     //endregion
 
@@ -120,12 +126,10 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
     //endregion
 
     //region fillData() Загрузка данных при старте приложения
-    private void fillData()
-    {
-        Context context = getContext();
-        Toast.makeText(context, "Загрузка...", Toast.LENGTH_SHORT).show();
+    private void fillData() {
+        Toast.makeText(appContext, "Загрузка...", Toast.LENGTH_SHORT).show();
         //Используем созданный файл данных SharedPreferences:
-        sharedPref = context.getSharedPreferences(SHAREDPREF, Context.MODE_PRIVATE);
+        sharedPref = appContext.getSharedPreferences(SHAREDPREF, Context.MODE_PRIVATE);
         currentPhone = sharedPref.getString(PHONESHAREDPREF, null);
         currTempStringValue = sharedPref.getString(TEMPVALSHAREDPREF, null);
         etPhone.setText(currentPhone);
@@ -133,19 +137,24 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
         //устанавливаем видимость объектов на экране
         setViewStates(true);
 
-        if (!TextUtils.isEmpty(currentPhone))
-        {
+        //если таймер = 0, но телефон забит куда звоним, то режим ожидания
+        if (customApplication.getTimerWorkDelay().getCounter() == 0 && !TextUtils.isEmpty(currentPhone)) {
             //смена изображения машины на экране
             imgChangeCar(R.drawable.car_waiting);
+            //Устанавливаем кнопку активации не активной, номер не радактируемый
+            setViewStates(false);
+        } else if (customApplication.getTimerWorkDelay().getCounter() > 0) {
+            //если же таймер существует и работает, то рисуем его на экране фрагмента
+            updateTextViewVal();
+            imgChangeCar(R.drawable.car_started);
+            bResetDevice.setEnabled(false);
+            bStartEngine.setEnabled(false);
             setViewStates(false);
         }
 
-        if(TextUtils.isEmpty(currTempStringValue) || TextUtils.equals(currTempStringValue, "0"))
-        {
+        if(TextUtils.isEmpty(currTempStringValue) || TextUtils.equals(currTempStringValue, "0")) {
             tvTempNotifIsActive.setVisibility(View.GONE);
-        }
-        else
-        {
+        } else {
             String res = getString(R.string.temp_notification) + " " + currTempStringValue + CELSIUS;
             tvTempNotifIsActive.setVisibility(View.VISIBLE);
             tvTempNotifIsActive.setText(res);
@@ -154,16 +163,14 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
     //endregion
 
     //region setViewStates Видимость объектов на экране
-    private void setViewStates(Boolean state)
-    {
+    private void setViewStates(Boolean state) {
         etPhone.setEnabled(state);
         bActivateDevice.setEnabled(state);
     }
     //endregion
 
     //region SaveSharedPref() Читаем сохраненные настройки
-    private void saveSharedPref()
-    {
+    private void saveSharedPref() {
         Context context = getContext();
         Toast.makeText(context, "Сохраняем...", Toast.LENGTH_SHORT).show();
         //Создаем объект Editor для создания пар имя-значение:
@@ -177,16 +184,14 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
     //endregion
 
     //region activateButtonClick Кнопка активации устройства
-    public void activateButtonClick()
-    {
+    public void activateButtonClick() {
         //функция звонилка
         generalCallFunc();
     }
     //endregion
 
     //region startButtonClick Обработка нажатия кнопки Старт
-    public void startButtonClick()
-    {
+    public void startButtonClick() {
         //Спрашиваем надо ли нам это
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(getContext());
 
@@ -270,8 +275,6 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
     //region resetButtonClick Обработка нажатия кнопки сброса устройтва
     public void resetButtonClick()
     {
-        currentPhone = etPhone.getText().toString();
-
         //Задаем вопрос стоит ли нам сбрасывать
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(getContext());
 
@@ -305,6 +308,7 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
     //region doReset Сброс устройства
     private void doReset(String number)
     {
+        currentPhone = etPhone.getText().toString();
         if (TextUtils.isEmpty(number))
         {
             etPhone.requestFocus();
@@ -324,8 +328,8 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
     //endregion
 
     //region generalCallFunc() Главная функция звонилка
-    private void generalCallFunc()
-    {
+    private void generalCallFunc() {
+        currentPhone = etPhone.getText().toString();
         if (TextUtils.isEmpty(currentPhone))
         {
             etPhone.requestFocus();
@@ -342,13 +346,13 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
     //region callToDevice Куда именно звоним
     private void callToDevice(String phoneNum)
     {
-        phoneCaller.callTo(appContext, phoneNum);
+        customApplication.getPhoneCaller().callTo(phoneNum);
     }
     //endregion
 
-    //region doSomethingCallBackPCL() Переопределяем функцию из PhoneCaller
+    //region onChoiseRunOrStopTimer() Переопределяем функцию из PhoneCaller
     @Override
-    public void doSomethingCallBackPhC() {
+    public void onChoiseRunOrStopTimer() {
         //либо мы стартуем двигло - тогда запускаем таймер прогрева и возвращаем наш экран приложухи обратно со всеми установками
         //либо его глушим - тогда стопим таймер и выставляем все вьюхи на экране согласно функционалу стоп
         if (startFlag) runTimerAndReturnActivity();
@@ -357,17 +361,7 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
     //endregion
 
     //region runTimerAndReturnActivity() Стартуем таймер прогрева и запускаем приложуние обратно после звонилки
-    private void runTimerAndReturnActivity()
-    {
-        // restart app
-        //получили интент нашей запущенной прложухи
-        Intent i = appContext.getPackageManager().getLaunchIntentForPackage(appContext
-                .getPackageName());
-        //добавляем флаг что мы его возобновляем а не запускаем с нуля сброшенным
-        i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        //ну и стартуем приложуху
-        startActivity(i);
-
+    private void runTimerAndReturnActivity() {
         //меняем картинку что двигло начало греться
         imgChangeCar(R.drawable.car_started);
         //отрисовали на экране кнопки как надо - выключили чтобы лишнего не натыкать
@@ -375,39 +369,33 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
         bStartEngine.setEnabled(false);
 
         //стартуем ивент по таймеру
-        twd.startTimer();
+        customApplication.getTimerWorkDelay().startTimer();
     }
     //endregion
 
-    //region onDoSomethingCallBack() и changeViewFragmentTWD() Переопределяем функции из TimerWorkDelay - связь класса и активити
+    //region onTimerStop() и onTimerChanged() Переопределяем функции из TimerWorkDelay - связь класса и активити
     @Override
-    public void doSomethingCallBackTWD() {
-        twd.stopTimer();
-
+    public void onTimerStop() {
         tvTimer.setText(getString(R.string.timerDefault));
         imgChangeCar(R.drawable.car_waiting);
         bResetDevice.setEnabled(true);
         bStartEngine.setEnabled(true);
-
         playEngineReady();
     }
 
     @Override
-    public void changeViewFragmentTWD() {
-        twd.changeTextViewVal(tvTimer);
+    public void onTimerChanged() {
+        updateTextViewVal();
+    }
+
+    public void updateTextViewVal() {
+        tvTimer.setText(String.format("%02d", customApplication.getTimerWorkDelay().getCounter()));
     }
     //endregion
 
     //region stopTimerAndReturnActivity() Стоп таймера
-    private void stopTimerAndReturnActivity()
-    {
-        twd.stopTimer();
-        //опять же возобновляем приложуху а не запускаем ее заново
-        Intent i = appContext.getPackageManager().getLaunchIntentForPackage(appContext
-                .getPackageName());
-        i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        startActivity(i);
-
+    private void stopTimerAndReturnActivity() {
+        customApplication.getTimerWorkDelay().stopTimerManual();
         //возвращаем начальные установки
         tvTimer.setText(getString(R.string.timerDefault));
         imgChangeCar(R.drawable.car_waiting);
@@ -465,7 +453,7 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
     public void onResume()
     {
         super.onResume();
-        fillData();
+        //fillData();
     }
 
     //region onPause() Чего делаем если свернули приложуху - сохраняемся же!
