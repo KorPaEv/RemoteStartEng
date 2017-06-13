@@ -82,8 +82,7 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
     }
 
     //region findViews() Поиск вьюх определенных в R.id
-    private void findViews()
-    {
+    private void findViews() {
         View rootView = getView();
         bActivateDevice = (Button) rootView.findViewById(R.id.bActivateDevice);
         bResetDevice = (Button) rootView.findViewById(R.id.bResetDevice);
@@ -199,10 +198,8 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
         alertDialog.setMessage("Заводим?");
 
         //region YES CLICK
-        alertDialog.setPositiveButton("ДА", new DialogInterface.OnClickListener()
-        {
-            public void onClick(DialogInterface dialog, int which)
-            {
+        alertDialog.setPositiveButton("ДА", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
                 //Стартуем двигло если надо
                 doStartEngine();
             }
@@ -210,10 +207,8 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
         //endregion
 
         //region NO CLICK
-        alertDialog.setNegativeButton("НЕТ", new DialogInterface.OnClickListener()
-        {
-            public void onClick(DialogInterface dialog, int which)
-            {
+        alertDialog.setNegativeButton("НЕТ", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
                 dialog.cancel();
             }
         });
@@ -223,8 +218,7 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
     //endregion
 
     //region doStartEngine() Выполняем старт двигла если захотели все таки
-    private void doStartEngine()
-    {
+    private void doStartEngine() {
         startFlag = true;
         //Вызываем звонилку
         generalCallFunc();
@@ -232,8 +226,7 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
     //endregion
 
     //region stopButtonClick Нажатие кнопки Стоп
-    public void stopButtonClick()
-    {
+    public void stopButtonClick() {
         //Спросили хотим ли застопить принудительно
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(getContext());
 
@@ -241,10 +234,8 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
         alertDialog.setMessage("Глушим?");
 
         //region YES CLICK
-        alertDialog.setPositiveButton("ДА", new DialogInterface.OnClickListener()
-        {
-            public void onClick(DialogInterface dialog, int which)
-            {
+        alertDialog.setPositiveButton("ДА", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
                 //Если захотели все же то застопили
                 doStopEngine();
             }
@@ -252,10 +243,8 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
         //endregion
 
         //region NO CLICK
-        alertDialog.setNegativeButton("НЕТ", new DialogInterface.OnClickListener()
-        {
-            public void onClick(DialogInterface dialog, int which)
-            {
+        alertDialog.setNegativeButton("НЕТ", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
                 dialog.cancel();
             }
         });
@@ -273,8 +262,7 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
     //endregion
 
     //region resetButtonClick Обработка нажатия кнопки сброса устройтва
-    public void resetButtonClick()
-    {
+    public void resetButtonClick() {
         //Задаем вопрос стоит ли нам сбрасывать
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(getContext());
 
@@ -282,10 +270,8 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
         alertDialog.setMessage("Вы уверены?");
 
         //region YES CLICK
-        alertDialog.setPositiveButton("ДА", new DialogInterface.OnClickListener()
-        {
-            public void onClick(DialogInterface dialog, int which)
-            {
+        alertDialog.setPositiveButton("ДА", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
                 //Если ДА то сбрасываем устройство
                 doReset(currentPhone);
             }
@@ -293,10 +279,8 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
         //endregion
 
         //region NO CLICK
-        alertDialog.setNegativeButton("НЕТ", new DialogInterface.OnClickListener()
-        {
-            public void onClick(DialogInterface dialog, int which)
-            {
+        alertDialog.setNegativeButton("НЕТ", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
                 dialog.cancel();
             }
         });
@@ -306,11 +290,9 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
     //endregion
 
     //region doReset Сброс устройства
-    private void doReset(String number)
-    {
+    private void doReset(String number) {
         currentPhone = etPhone.getText().toString();
-        if (TextUtils.isEmpty(number))
-        {
+        if (TextUtils.isEmpty(number)) {
             etPhone.requestFocus();
             etPhone.setError("Что сбрасываем?");
             return;
@@ -330,8 +312,7 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
     //region generalCallFunc() Главная функция звонилка
     private void generalCallFunc() {
         currentPhone = etPhone.getText().toString();
-        if (TextUtils.isEmpty(currentPhone))
-        {
+        if (TextUtils.isEmpty(currentPhone)) {
             etPhone.requestFocus();
             etPhone.setError("Куда звоним?");
             return;
@@ -344,8 +325,7 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
     //endregion
 
     //region callToDevice Куда именно звоним
-    private void callToDevice(String phoneNum)
-    {
+    private void callToDevice(String phoneNum) {
         customApplication.getPhoneCaller().callTo(phoneNum);
     }
     //endregion
@@ -355,8 +335,11 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
     public void onChoiseRunOrStopTimer() {
         //либо мы стартуем двигло - тогда запускаем таймер прогрева и возвращаем наш экран приложухи обратно со всеми установками
         //либо его глушим - тогда стопим таймер и выставляем все вьюхи на экране согласно функционалу стоп
-        if (startFlag) runTimerAndReturnActivity();
-        else stopTimerAndReturnActivity();
+        if (startFlag) {
+            runTimerAndReturnActivity();
+        } else {
+            stopTimerAndReturnActivity();
+        }
     }
     //endregion
 
@@ -406,64 +389,54 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
     //endregion
 
     //region playEngineReady() Будильник для таймера
-    private void playEngineReady()
-    {
+    private void playEngineReady() {
         //Выбрали мелодию и проиграли ее
         mp = MediaPlayer.create(appContext, R.raw.ready_long);
-        try
-        {
-            if (mp.isPlaying())
-            {
+        try {
+            if (mp.isPlaying()) {
                 mp.stop();
                 mp.release();
                 mp = MediaPlayer.create(appContext, R.raw.ready_long);
             }
             mp.start();
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
     //endregion
 
     //region SendSms Функция отправки смс
-    public void sendSms(String number, String message)
-    {
+    public void sendSms(String number, String message) {
         SmsManager sms = SmsManager.getDefault();
         sms.sendTextMessage(number, null, message, null, null);
     }
     //endregion
 
     //region imgChangeCar Функция смены изображений - старт или стоп или сброс
-    private void imgChangeCar(int idDrawable)
-    {
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.JELLY_BEAN)
-        {
+    private void imgChangeCar(int idDrawable) {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.JELLY_BEAN) {
             imgLayout.setBackgroundDrawable(getResources().getDrawable(idDrawable));
-        }
-        else
-        {
+        } else {
             imgLayout.setBackground(getResources().getDrawable(idDrawable));
         }
     }
     //endregion
 
     @Override
-    public void onResume()
-    {
+    public void onResume() {
         super.onResume();
+        CustomApplication.activityPaused();//Передали в application что мы на паузе
         //fillData();
     }
 
     //region onPause() Чего делаем если свернули приложуху - сохраняемся же!
     @Override
-    public void onPause()
-    {
+    public void onPause() {
         super.onPause();
         saveSharedPref();
         //и еще убрали фокус с номеранаберателя чтобы глаза клава не мозолила
         etPhone.clearFocus();
+        CustomApplication.activityResumed();//Передали в application что мы возобновили работу
     }
     //endregion
 }
