@@ -1,17 +1,25 @@
 package online.pins24.remotestartengine;
 
+import android.content.Context;
+import android.content.IntentFilter;
+
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 
+public class MapFragment extends BaseFragment implements NetworkChangeReceiver.NetworkStateReceiverListener {
 
-public class MapFragment  extends BaseFragment {
-
+    Context appContext;
     Button bGetCoord;
-    View view;
+    View rootView;
+    TextView tvNetworkState;
+    private NetworkChangeReceiver networkChangeReceiver;
 
     @Nullable
     @Override
@@ -22,6 +30,7 @@ public class MapFragment  extends BaseFragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+        appContext = getContext().getApplicationContext();
         findViews();
         setDefaultSettings();
         //fillData();
@@ -30,25 +39,52 @@ public class MapFragment  extends BaseFragment {
     //region findViews() Поиск вьюх определенных в R.id
     private void findViews()
     {
-        View rootView = getView();
+        rootView = getView();
         bGetCoord = (Button) rootView.findViewById(R.id.bGetCoordinates);
+        tvNetworkState = (TextView) rootView.findViewById(R.id.tvNetworkState);
     }
     //endregion
 
     private void setDefaultSettings()
     {
+        networkChangeReceiver = new NetworkChangeReceiver();
+        networkChangeReceiver.addListener(this);
+        appContext.registerReceiver(networkChangeReceiver, new IntentFilter(android.net.ConnectivityManager.CONNECTIVITY_ACTION));
 
+        ConnectivityManager connectivityManager = (ConnectivityManager) appContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+        if (networkInfo != null && networkInfo.isConnected()) {
+            changeTextStatus(true);
+        } else {
+            changeTextStatus(false);
+        }
     }
 
-    public Boolean isOnline() {
-        try {
-            Process p1 = java.lang.Runtime.getRuntime().exec("ping -c 1 www.google.com");
-            int returnVal = p1.waitFor();
-            boolean reachable = (returnVal == 0);
-            return reachable;
-        } catch (Exception e) {
-            e.printStackTrace();
+    // Меняем текст вьюхи - в сети или нет
+    public void changeTextStatus(boolean isConnected) {
+        if (isConnected) {
+            tvNetworkState.setText(getString(R.string.networkStateOn));
+            tvNetworkState.setTextColor(getResources().getColor(R.color.colorNetworkOn));
+        } else {
+            tvNetworkState.setText(getString(R.string.networkStateOff));
+            tvNetworkState.setTextColor(getResources().getColor(R.color.colorNetworkOff));
         }
-        return false;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        CustomApplication.activityPaused();// On Pause notify the Application
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        CustomApplication.activityResumed();// On Resume notify the Application
+    }
+
+    @Override
+    public void onNetworkStateChanged(boolean isConnected) {
+        changeTextStatus(isConnected);
     }
 }

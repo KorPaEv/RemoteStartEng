@@ -4,4 +4,6 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#c7c7c7</color>
     <color name="colorItemView">#ffff8800</color>
+    <color name="colorNetworkOn">#00ff00</color>
+    <color name="colorNetworkOff">#ff0000</color>
 </resources>
