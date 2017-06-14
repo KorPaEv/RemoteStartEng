@@ -2,7 +2,6 @@ package online.pins24.remotestartengine;
 
 import android.content.Context;
 import android.content.IntentFilter;
-
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
@@ -11,7 +10,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import org.osmdroid.api.IMapController;
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.util.GeoPoint;
+import org.osmdroid.views.MapView;
 
 public class MapFragment extends BaseFragment implements NetworkChangeReceiver.NetworkStateReceiverListener {
 
@@ -20,11 +25,14 @@ public class MapFragment extends BaseFragment implements NetworkChangeReceiver.N
     View rootView;
     TextView tvNetworkState;
     private NetworkChangeReceiver networkChangeReceiver;
+    private MapView mapView;
+    IMapController mapController;
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_map, container, false);
+        View v = inflater.inflate(R.layout.fragment_map, container, false);
+        return v;
     }
 
     @Override
@@ -33,7 +41,6 @@ public class MapFragment extends BaseFragment implements NetworkChangeReceiver.N
         appContext = getContext().getApplicationContext();
         findViews();
         setDefaultSettings();
-        //fillData();
     }
 
     //region findViews() Поиск вьюх определенных в R.id
@@ -47,10 +54,18 @@ public class MapFragment extends BaseFragment implements NetworkChangeReceiver.N
 
     private void setDefaultSettings()
     {
+        networkReceiverInit();
+        onFirstLoadNetworkStatus();
+        loadMap();
+    }
+
+    private void networkReceiverInit() {
         networkChangeReceiver = new NetworkChangeReceiver();
         networkChangeReceiver.addListener(this);
         appContext.registerReceiver(networkChangeReceiver, new IntentFilter(android.net.ConnectivityManager.CONNECTIVITY_ACTION));
+    }
 
+    private void onFirstLoadNetworkStatus() {
         ConnectivityManager connectivityManager = (ConnectivityManager) appContext.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
         if (networkInfo != null && networkInfo.isConnected()) {
@@ -58,6 +73,22 @@ public class MapFragment extends BaseFragment implements NetworkChangeReceiver.N
         } else {
             changeTextStatus(false);
         }
+    }
+
+    private void loadMap() {
+        appContext = getActivity();
+        mapView = new MapView(appContext, null);
+        mapView.getTileProvider().setTileSource(TileSourceFactory.MAPNIK);
+        mapView.setBuiltInZoomControls(true);
+        mapView.setMultiTouchControls(true);
+        mapController = mapView.getController();
+        mapController.setZoom(10);
+        GeoPoint startPoint = new GeoPoint(54, 55);
+        mapController.setCenter(startPoint);
+        RelativeLayout relativeLayout = (RelativeLayout) getActivity().findViewById(R.id.map_layout);
+        mapView.setLayoutParams(new RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT));
+        relativeLayout.addView(mapView);
     }
 
     // Меняем текст вьюхи - в сети или нет
