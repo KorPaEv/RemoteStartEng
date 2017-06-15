@@ -51,7 +51,6 @@ public class NetworkChangeReceiver extends WakefulBroadcastReceiver {
 
     private void notifyState(NetworkStateReceiverListener listener) {
         if(connected == null || listener == null) return;
-
         listener.onNetworkStateChanged(connected);
     }
 

@@ -168,12 +168,11 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
     }
     //endregion
 
-    //region SaveSharedPref() Читаем сохраненные настройки
+    //region SaveSharedPref() Сохраняем настройки
     private void saveSharedPref() {
-        Context context = getContext();
-        Toast.makeText(context, "Сохраняем...", Toast.LENGTH_SHORT).show();
+        Toast.makeText(appContext, "Сохраняем...", Toast.LENGTH_SHORT).show();
         //Создаем объект Editor для создания пар имя-значение:
-        sharedPref = context.getSharedPreferences(SHAREDPREF, Context.MODE_PRIVATE);
+        sharedPref = appContext.getSharedPreferences(SHAREDPREF, Context.MODE_PRIVATE);
         //Создаем объект Editor для создания пар имя-значение:
         SharedPreferences.Editor shpEditor = sharedPref.edit();
         currentPhone = etPhone.getText().toString();
