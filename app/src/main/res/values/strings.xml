@@ -21,5 +21,6 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="networkStateOn">Подключение к интернету активно.</string>
     <string name="networkStateOff">Отсутствует подключение к интернету.</string>
-
+    <string name="locationCarRequest">Данные последнего запроса координат: </string>
+    <string name="emptyVal">Неопределено</string>
 </resources>
