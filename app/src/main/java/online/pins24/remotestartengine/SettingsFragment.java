@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -27,6 +28,8 @@ public class SettingsFragment extends BaseFragment
     TextView minV, maxV, currV;
     Button bSetTemperStart, bResetTemperStart;
     View view;
+    Context appContext;
+    private CustomToast customToast;
 
     private int currTempValue = 0;
     private final String SHAREDPREF = "SharedPref";
@@ -47,6 +50,8 @@ public class SettingsFragment extends BaseFragment
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+        appContext = getContext().getApplicationContext();
+        customToast = new CustomToast(appContext);
         //ищем наши вьюхи на активити
         findViews();
         setDefaultSettings();
@@ -180,35 +185,14 @@ public class SettingsFragment extends BaseFragment
     {
         if (TextUtils.isEmpty(currentPhone))
         {
-            showToast(view, "Мобильный номер неопределен!");
+            customToast.showToast("Мобильный номер неопределен!");
             return;
         }
         saveSharedPref();
         sendSms(currentPhone, "temp;" + Integer.toString(currTempValue));
-        showToast(view, "Настройки контроллера, для запуска двигателя по температуре, применены!");
+        customToast.showToast("Настройки контроллера, для запуска двигателя по температуре, применены!");
     }
     //endregion
-
-    private void showToast(View view, String str)
-    {
-        //создаем и отображаем текстовое уведомление
-        Toast toast = Toast.makeText(getContext(), str, Toast.LENGTH_SHORT);
-        toast.setGravity(Gravity.CENTER, 0, 0);
-        GradientDrawable gd = new GradientDrawable();
-        gd.setColor(0xFFCB3E3E);
-        gd.setCornerRadius(10);
-
-        LinearLayout v = (LinearLayout)toast.getView();
-
-        TextView toastView = (TextView) v.getChildAt(0);
-        toastView.setPadding(10, 10, 10, 10);
-        toastView.setTextSize(14);
-
-        if(Build.VERSION.SDK_INT >= 16)
-            toastView.setBackground(gd);
-        else toastView.setBackgroundDrawable(gd);
-        toast.show();
-    }
 
     //region SendSms Функция отправки смс
     public void sendSms(String number, String message)
@@ -256,7 +240,7 @@ public class SettingsFragment extends BaseFragment
     {
         if (TextUtils.isEmpty(currentPhone))
         {
-            showToast(view, "Мобильный номер неопределен!");
+            customToast.showToast("Мобильный номер неопределен!");
             return;
         }
         currTempValue = 0;
@@ -264,7 +248,7 @@ public class SettingsFragment extends BaseFragment
         seekBar.setProgress(currTempValue + maxSeek);
         saveSharedPref();
         sendSms(currentPhone, "temp;" + Integer.toString(currTempValue));
-        showToast(view, "Запуск двигателя по температуре деактивирован!");
+        customToast.showToast("Запуск двигателя по температуре деактивирован!");
     }
 
     //endregion

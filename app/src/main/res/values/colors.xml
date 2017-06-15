@@ -6,4 +6,5 @@
     <color name="colorItemView">#ffff8800</color>
     <color name="colorNetworkOn">#00ff00</color>
     <color name="colorNetworkOff">#ff0000</color>
+    <color name="colorToast">#FFCB3E3E</color>
 </resources>

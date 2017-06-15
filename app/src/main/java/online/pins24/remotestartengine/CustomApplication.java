@@ -35,6 +35,5 @@ public class CustomApplication extends Application {
 
     public static void activityPaused() {
         activityVisible = false;// this will set false when activity paused
-
     }
 }
