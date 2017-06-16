@@ -28,7 +28,7 @@ public class CustomToast {
     public void showToast(String str)
     {
         //создаем и отображаем текстовое уведомление
-        Toast toast = Toast.makeText(_context, str, Toast.LENGTH_SHORT);
+        Toast toast = Toast.makeText(_context, str, Toast.LENGTH_LONG);
         toast.setGravity(Gravity.CENTER, 0, 0);
         GradientDrawable gd = new GradientDrawable();
         gd.setColor(color);

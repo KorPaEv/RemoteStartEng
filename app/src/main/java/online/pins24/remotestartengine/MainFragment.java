@@ -152,7 +152,7 @@ public class MainFragment extends BaseFragment implements CustomTimer.CustomTime
         if(TextUtils.isEmpty(currTempStringValue) || TextUtils.equals(currTempStringValue, "0")) {
             tvTempNotifIsActive.setVisibility(View.GONE);
         } else {
-            String res = getString(R.string.temp_notification) + " " + currTempStringValue + CELSIUS;
+            String res = String.format("%s %s%s", getString(R.string.temp_notification), currTempStringValue, CELSIUS);
             tvTempNotifIsActive.setVisibility(View.VISIBLE);
             tvTempNotifIsActive.setText(res);
         }

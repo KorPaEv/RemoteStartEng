@@ -1,6 +1,8 @@
 package online.pins24.remotestartengine;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
@@ -17,6 +19,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.apache.commons.lang3.StringUtils;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
@@ -28,16 +31,20 @@ import org.osmdroid.views.overlay.Marker;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
+import okhttp3.internal.Util;
+
 public class MapFragment extends BaseFragment implements NetworkChangeReceiver.NetworkStateReceiverListener {
 
     private String strCurrDateTime; //текущая дата время
     private int mapZoom; //зум для карты
+    private String currentPhone;
     private float latCoord, lngCoord; //широта долгота
     private final float LATDEFAULT = 0; //значение для широты по умолчанию
     private final float LNGDEFAULT = 0;
     private final int NULLTMAPZOOM = 2; //значение зума для карты когда у нас не было еще запроса координат
     private final int DEFAULTMAPZOOM = 16; //значение зума для карты когда у нас пришли координаты по запросу
     private final String SHAREDPREF = "SharedPref";
+    private final String PHONESHAREDPREF = "PhoneSharedPref";
     private final String DATETIMEREQUESTCOORDSHAREDPREF = "dateRequestCoordSharedPref";
     private final String LATSHAREDPREF = "latSharedPref";
     private final String LNGSHAREDPREF = "lngSharedPref";
@@ -117,14 +124,51 @@ public class MapFragment extends BaseFragment implements NetworkChangeReceiver.N
 
     //region requestCoordinates() Запрос координат
     private void requestCoordinates() {
-        //Допустим что по запросу нам пришли координаты
-        strCurrDateTime = simpleDateFormat.format(calendar.getTime()); //получили текущее время
-        latCoord = (float) 53.37; //получили координаты
-        lngCoord = (float) 83.72;
-        saveSharedPref(); //сохранили данные последнего запроса
-        fillData(); //загрузились
+        if (StringUtils.isEmpty(currentPhone)) {
+            customToast.showToast("На главном экране не задан номер телефона!");
+            return;
+        }
+        askRequestCoordinates();
     }
     //endregion
+
+    private void askRequestCoordinates() {
+        //Спрашиваем надо ли нам это
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(getContext());
+
+        alertDialog.setTitle("Запрос координат...");
+        if (isNetworkOnline()) {
+            alertDialog.setMessage("Уверены?");
+        } else {
+            alertDialog.setMessage(String.format("%s.\n%s.\n%s",
+                    "Интернет отключен",
+                    "Карта в автономном режиме",
+                    "Выполнить запрос?"));
+        }
+
+        //region YES CLICK
+        alertDialog.setPositiveButton("ДА", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                customToast.showToast("Ожидайте смс по запросу с отображением информации на карте.");
+                //Допустим что по запросу нам пришли координаты
+                strCurrDateTime = simpleDateFormat.format(calendar.getTime()); //получили текущее время
+                latCoord = (float) 53.31; //получили координаты
+                lngCoord = (float) 83.79;
+                saveSharedPref(); //сохранили данные последнего запроса
+                fillData(); //загрузились
+            }
+        });
+        //endregion
+
+        //region NO CLICK
+        alertDialog.setNegativeButton("НЕТ", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+        //endregion
+        alertDialog.show();
+    }
 
     private void fillData() {
         Toast.makeText(appContext, "Загрузка...", Toast.LENGTH_SHORT).show();
@@ -251,6 +295,7 @@ public class MapFragment extends BaseFragment implements NetworkChangeReceiver.N
     private void loadSharedPref() {
         //Используем созданный файл данных SharedPreferences:
         sharedPref = appContext.getSharedPreferences(SHAREDPREF, Context.MODE_PRIVATE);
+        currentPhone = sharedPref.getString(PHONESHAREDPREF, null);
         strCurrDateTime = sharedPref.getString(DATETIMEREQUESTCOORDSHAREDPREF, getString(R.string.emptyVal));
         latCoord = sharedPref.getFloat(LATSHAREDPREF, LATDEFAULT);
         lngCoord = sharedPref.getFloat(LNGSHAREDPREF, LNGDEFAULT);
