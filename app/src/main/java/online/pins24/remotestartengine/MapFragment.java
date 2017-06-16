@@ -10,6 +10,8 @@ import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -41,6 +43,7 @@ public class MapFragment extends BaseFragment implements NetworkChangeReceiver.N
     private final String LNGSHAREDPREF = "lngSharedPref";
 
     SharedPreferences sharedPref;
+    Animation animation;
     Context appContext;
     Context appActivity;
     Button bGetCoord;
@@ -112,14 +115,16 @@ public class MapFragment extends BaseFragment implements NetworkChangeReceiver.N
     };
     //endregion
 
+    //region requestCoordinates() Запрос координат
     private void requestCoordinates() {
         //Допустим что по запросу нам пришли координаты
         strCurrDateTime = simpleDateFormat.format(calendar.getTime()); //получили текущее время
-        latCoord = (float) 53.35; //получили координаты
-        lngCoord = (float) 83.76;
+        latCoord = (float) 53.37; //получили координаты
+        lngCoord = (float) 83.72;
         saveSharedPref(); //сохранили данные последнего запроса
         fillData(); //загрузились
     }
+    //endregion
 
     private void fillData() {
         Toast.makeText(appContext, "Загрузка...", Toast.LENGTH_SHORT).show();
@@ -137,24 +142,39 @@ public class MapFragment extends BaseFragment implements NetworkChangeReceiver.N
 
     //region firstLoadNetworkStatus() Отрисовали на экране состояние сети
     private void firstLoadNetworkStatus() {
-        if (isNetworkOnline()) {
-            changeTextStatus(true);
-        } else {
-        changeTextStatus(false);
-        }
+        changeTextStatus(isNetworkOnline());
     }
     //endregion
+
 
     //region firstLoadNetworkStatus() Проверяем экране состояние сети
     private boolean isNetworkOnline() {
         connectivityManager = (ConnectivityManager) appContext.getSystemService(Context.CONNECTIVITY_SERVICE);
         networkInfo = connectivityManager.getActiveNetworkInfo();
         if (networkInfo != null && networkInfo.isConnected()) {
+            stopNetStateAnim();
             return true;
         }
+        startNetStateAnim();
         return false;
     }
     //endregion
+
+    private void startNetStateAnim() {
+        animation = new AlphaAnimation(0.0f, 1.0f);
+        animation.setDuration(700); //частота мигания в миллисекундах
+        animation.setStartOffset(20);
+        animation.setRepeatMode(Animation.REVERSE);
+        animation.setRepeatCount(Animation.INFINITE);
+        tvNetworkState.startAnimation(animation);
+    }
+
+    private void stopNetStateAnim() {
+        if (tvNetworkState.getAnimation() != null) {
+            tvNetworkState.getAnimation().cancel();
+            tvNetworkState.clearAnimation();
+        }
+    }
 
     //region loadMap() Грузим карту
     private void loadMap() {
@@ -240,13 +260,14 @@ public class MapFragment extends BaseFragment implements NetworkChangeReceiver.N
     @Override
     public void onPause() {
         super.onPause();
-        CustomApplication.activityPaused();// On Pause notify the Application
+        CustomApplication.activityPaused();// Встали на паузу
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        CustomApplication.activityResumed();// On Resume notify the Application
+        CustomApplication.activityResumed();// Возобновили приложение
+        changeTextStatus(isNetworkOnline());
     }
 
     @Override
