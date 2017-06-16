@@ -5,15 +5,15 @@ import android.os.Handler;
 import java.util.concurrent.TimeUnit;
 
 //Вторая реализация таймера и события что делать по его окончанию
-public class TimerWorkDelay {
+public class CustomTimer {
 
-    private TimerWorkDelayCallBack timerWorkDelayCallBack;
+    private CustomTimerCallBack customTimerCallBack;
     private Handler handler = new Handler();
     private int counter = 0;
     private static long ONE_MIN = TimeUnit.MINUTES.toMillis(1);
 
-    public void setTimerWorkDelayCallBack(TimerWorkDelayCallBack timerWorkDelayCallBack) {
-        this.timerWorkDelayCallBack = timerWorkDelayCallBack;
+    public void setCustomTimerCallBack(CustomTimerCallBack customTimerCallBack) {
+        this.customTimerCallBack = customTimerCallBack;
     }
 
     public int getCounter() {
@@ -44,7 +44,7 @@ public class TimerWorkDelay {
     public void tickTimer() {
         counter--;
         if (counter > 0) {
-            timerWorkDelayCallBack.onTimerChanged();
+            customTimerCallBack.onTimerChanged();
             scheduleNextMinute();
         }
         else {
@@ -58,15 +58,15 @@ public class TimerWorkDelay {
     }
 
     private void doSomething() {
-        if (timerWorkDelayCallBack == null) {
+        if (customTimerCallBack == null) {
             return;
         }
         else {
-            timerWorkDelayCallBack.onTimerStop();
+            customTimerCallBack.onTimerStop();
         }
     }
 
-    public interface TimerWorkDelayCallBack {
+    public interface CustomTimerCallBack {
         void onTimerStop();
         void onTimerChanged();
     }

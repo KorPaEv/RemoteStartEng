@@ -8,7 +8,7 @@ public class CustomApplication extends Application {
     public static boolean activityVisible; //Флажок видимости текущих активити
 
     private PhoneCaller phoneCaller;
-    private TimerWorkDelay timerWorkDelay;
+    private CustomTimer customTimer;
 
     public PhoneCaller getPhoneCaller() {
         if (phoneCaller == null) {
@@ -17,11 +17,11 @@ public class CustomApplication extends Application {
         return phoneCaller;
     }
 
-    public TimerWorkDelay getTimerWorkDelay() {
-        if (timerWorkDelay == null) {
-            timerWorkDelay = new TimerWorkDelay();
+    public CustomTimer getCustomTimer() {
+        if (customTimer == null) {
+            customTimer = new CustomTimer();
         }
-        return timerWorkDelay;
+        return customTimer;
     }
 
     public static boolean isActivityVisible() {

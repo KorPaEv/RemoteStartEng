@@ -5,7 +5,7 @@ import android.os.Handler;
 import android.os.SystemClock;
 
 //Первая реализация таймера и события что делать по его окончанию
-public class TimerWork {
+public class CustomTimerOld {
 
     // счетчик времени
     private long mTime = 0L;
@@ -15,7 +15,7 @@ public class TimerWork {
     // Создаётся в основном UI-потоке
     private Handler mHandler;
 
-    public TimerWork(Context currContext) {
+    public CustomTimerOld(Context currContext) {
         context = currContext;
         mHandler = new Handler();
     }

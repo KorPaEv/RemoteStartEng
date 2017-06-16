@@ -2,7 +2,6 @@ package online.pins24.remotestartengine;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.media.MediaPlayer;
@@ -16,12 +15,11 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.content.Context;
 
-public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWorkDelayCallBack, PhoneCaller.PhoneCallerCallBack
+public class MainFragment extends BaseFragment implements CustomTimer.CustomTimerCallBack, PhoneCaller.PhoneCallerCallBack
 {
     //region КОНСТАНТЫ
     private final String SHAREDPREF = "SharedPref";
@@ -66,7 +64,7 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
         //загрузка данных в переменные
         fillData();
         //работаем с таймером через Application, цепляем интерфейс
-        customApplication.getTimerWorkDelay().setTimerWorkDelayCallBack(this);
+        customApplication.getCustomTimer().setCustomTimerCallBack(this);
         //менеджер звонков
         customApplication.getPhoneCaller().setPhoneCallerCallBack(this);
     }
@@ -76,7 +74,7 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
     public void onDestroyView() {
         //Убиваем наши объекты звонилки и таймера при сворачивании приложения
         //При этом фоном таймер продолжает свою работу
-        customApplication.getTimerWorkDelay().setTimerWorkDelayCallBack(null);
+        customApplication.getCustomTimer().setCustomTimerCallBack(null);
         customApplication.getPhoneCaller().setPhoneCallerCallBack(null);
         super.onDestroyView();
     }
@@ -137,12 +135,12 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
         setViewStates(true);
 
         //если таймер = 0, но телефон забит куда звоним, то режим ожидания
-        if (customApplication.getTimerWorkDelay().getCounter() == 0 && !TextUtils.isEmpty(currentPhone)) {
+        if (customApplication.getCustomTimer().getCounter() == 0 && !TextUtils.isEmpty(currentPhone)) {
             //смена изображения машины на экране
             imgChangeCar(R.drawable.car_waiting);
             //Устанавливаем кнопку активации не активной, номер не радактируемый
             setViewStates(false);
-        } else if (customApplication.getTimerWorkDelay().getCounter() > 0) {
+        } else if (customApplication.getCustomTimer().getCounter() > 0) {
             //если же таймер существует и работает, то рисуем его на экране фрагмента
             updateTextViewVal();
             imgChangeCar(R.drawable.car_started);
@@ -351,11 +349,11 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
         bStartEngine.setEnabled(false);
 
         //стартуем ивент по таймеру
-        customApplication.getTimerWorkDelay().startTimer();
+        customApplication.getCustomTimer().startTimer();
     }
     //endregion
 
-    //region onTimerStop() и onTimerChanged() Переопределяем функции из TimerWorkDelay - связь класса и активити
+    //region onTimerStop() и onTimerChanged() Переопределяем функции из CustomTimer - связь класса и активити
     @Override
     public void onTimerStop() {
         tvTimer.setText(getString(R.string.timerDefault));
@@ -371,13 +369,13 @@ public class MainFragment extends BaseFragment implements TimerWorkDelay.TimerWo
     }
 
     public void updateTextViewVal() {
-        tvTimer.setText(String.format("%02d", customApplication.getTimerWorkDelay().getCounter()));
+        tvTimer.setText(String.format("%02d", customApplication.getCustomTimer().getCounter()));
     }
     //endregion
 
     //region stopTimerAndReturnActivity() Стоп таймера
     private void stopTimerAndReturnActivity() {
-        customApplication.getTimerWorkDelay().stopTimerManual();
+        customApplication.getCustomTimer().stopTimerManual();
         //возвращаем начальные установки
         tvTimer.setText(getString(R.string.timerDefault));
         imgChangeCar(R.drawable.car_waiting);
