@@ -295,7 +295,7 @@ public class MainFragment extends BaseFragment implements CustomTimer.CustomTime
             return;
         }
         //Посылаем команду на сброс устройству
-        sendSms(number, RESET);
+        SmsUtils.sendSms(number, RESET);
         //вертаем все на место
         setViewStates(true);
         etPhone.setText(null);
@@ -399,13 +399,6 @@ public class MainFragment extends BaseFragment implements CustomTimer.CustomTime
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-    //endregion
-
-    //region SendSms Функция отправки смс
-    public void sendSms(String number, String message) {
-        SmsManager sms = SmsManager.getDefault();
-        sms.sendTextMessage(number, null, message, null, null);
     }
     //endregion
 

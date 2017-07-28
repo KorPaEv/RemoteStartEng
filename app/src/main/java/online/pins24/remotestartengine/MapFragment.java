@@ -149,13 +149,8 @@ public class MapFragment extends BaseFragment implements NetworkChangeReceiver.N
         //region YES CLICK
         alertDialog.setPositiveButton("ДА", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
-                customToast.showToast("Ожидайте смс по запросу с отображением информации на карте.");
-                //Допустим что по запросу нам пришли координаты
-                strCurrDateTime = simpleDateFormat.format(calendar.getTime()); //получили текущее время
-                latCoord = (float) 53.31; //получили координаты
-                lngCoord = (float) 83.79;
-                saveSharedPref(); //сохранили данные последнего запроса
-                fillData(); //загрузились
+                SmsUtils.sendSms(currentPhone, "GetLatLng");
+                customToast.showToast("Ожидайте смс по Вашему запросу с отображением информации на карте.");
             }
         });
         //endregion
