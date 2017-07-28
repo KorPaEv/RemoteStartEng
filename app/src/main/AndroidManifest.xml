@@ -36,12 +36,30 @@
             android:enabled="true"
             android:exported="true">
             <intent-filter
-                android:priority="999999999">
+                android:priority="999999998">
                 <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
                 <action android:name="android.net.wifi.WIFI_STATE_CHANGED" />
                 <action android:name="android.net.wifi.STATE_CHANGE" />
             </intent-filter>
         </receiver>
+
+        <receiver
+            android:name=".MessageReceiver"
+            android:enabled="true"
+            android:exported="true"
+            android:permission="android.permission.BROADCAST_SMS">
+            <intent-filter
+                android:priority="999999999">
+                <action android:name="android.provider.Telephony.SMS_RECEIVED"/>
+                <action android:name="android.provider.Telephony.SMS_DELIVER"/>
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:enabled="true"
+            android:name=".MessageService"
+            android:exported="true">
+        </service>
 
         <service
             android:enabled="true"
